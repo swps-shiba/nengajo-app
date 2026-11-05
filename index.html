@@ -19,8 +19,8 @@
   <main>
     <section class="toolbar panel" aria-label="データ操作">
       <div class="toolbar-group">
-        <label class="button button-secondary file-button">CSVを読み込む
-          <input id="csvInput" type="file" accept=".csv,text/csv">
+        <label class="button button-secondary file-button">住所録を読み込む
+          <input id="csvInput" type="file" accept=".csv,.fwa,text/csv">
         </label>
         <button id="exportButton" class="button button-secondary" type="button">CSVを書き出す</button>
         <label class="button button-secondary file-button">裏面画像を選ぶ
@@ -60,7 +60,7 @@
           <tbody id="contactRows"></tbody>
         </table>
       </div>
-      <p class="hint">CSVは一般的な筆まめの項目名を自動判別します。文字コードはUTF-8を優先し、Shift_JISのファイルも対応ブラウザーでは読み込みます。</p>
+      <p class="hint">筆まめの住所録ファイル（.fwa）は直接読み込めません。筆まめでCSV形式に書き出してから選択してください。CSVは一般的な筆まめの項目名を自動判別し、UTF-8とShift_JISに対応します。</p>
     </section>
 
     <section id="senderPanel" class="panel tab-panel" hidden>

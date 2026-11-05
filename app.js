@@ -283,6 +283,9 @@
 
   async function importCsv(file) {
     const buffer = await file.arrayBuffer();
+    if (buffer.byteLength >= 8 && new TextDecoder("ascii").decode(buffer.slice(0, 8)) === "MRNDBFMT") {
+      throw new Error("筆まめの住所録ファイル（.fwa）は直接読み込めません。筆まめでCSV形式に書き出してから読み込んでください。");
+    }
     let text;
     try {
       text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
