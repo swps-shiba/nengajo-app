@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#176b58">
+  <title>年賀状ノート | 宛名・デザイン印刷</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">NEW YEAR CARD MANAGER</p>
+      <h1>年賀状ノート</h1>
+    </div>
+    <button id="printButton" class="button button-light" type="button">選択面を印刷</button>
+  </header>
+
+  <main>
+    <section class="toolbar panel" aria-label="データ操作">
+      <div class="toolbar-group">
+        <label class="button button-secondary file-button">CSVを読み込む
+          <input id="csvInput" type="file" accept=".csv,text/csv">
+        </label>
+        <button id="exportButton" class="button button-secondary" type="button">CSVを書き出す</button>
+        <label class="button button-secondary file-button">裏面画像を選ぶ
+          <input id="imageInput" type="file" accept="image/png,image/jpeg">
+        </label>
+      </div>
+      <p id="statusMessage" class="status-message" role="status" aria-live="polite"></p>
+    </section>
+
+    <nav class="tabs" aria-label="管理メニュー">
+      <button class="tab is-active" data-panel="contactsPanel" type="button">住所録</button>
+      <button class="tab" data-panel="senderPanel" type="button">差出人</button>
+      <button class="tab" data-panel="designPanel" type="button">裏面デザイン</button>
+      <button class="tab" data-panel="printPanel" type="button">印刷プレビュー</button>
+    </nav>
+
+    <section id="contactsPanel" class="panel tab-panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">ADDRESS BOOK</p>
+          <h2>住所録</h2>
+        </div>
+        <button id="addContactButton" class="button button-primary" type="button">＋ 宛先を追加</button>
+      </div>
+      <div class="filter-row">
+        <label class="toggle-label">
+          <input id="excludeRetired" type="checkbox" checked>
+          <span>年賀状じまい済みの宛先を一括印刷から除外</span>
+        </label>
+        <span id="contactCount" class="muted"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>印刷</th><th>宛名</th><th>住所</th><th>年賀状じまい</th><th>年次記録</th><th>操作</th>
+          </tr></thead>
+          <tbody id="contactRows"></tbody>
+        </table>
+      </div>
+      <p class="hint">CSVは一般的な筆まめの項目名を自動判別します。文字コードはUTF-8を優先し、Shift_JISのファイルも対応ブラウザーでは読み込みます。</p>
+    </section>
+
+    <section id="senderPanel" class="panel tab-panel" hidden>
+      <div class="section-heading">
+        <div><p class="eyebrow">RETURN ADDRESS</p><h2>差出人情報</h2></div>
+      </div>
+      <form id="senderForm" class="form-grid">
+        <label>氏名<input name="name" autocomplete="name" maxlength="80"></label>
+        <label>郵便番号<input name="postalCode" inputmode="numeric" maxlength="12" placeholder="123-4567"></label>
+        <label class="span-2">住所<textarea name="address" rows="3" maxlength="240"></textarea></label>
+        <label>連名<input name="jointName" maxlength="80"></label>
+        <button class="button button-primary span-2" type="submit">差出人情報を保存</button>
+      </form>
+    </section>
+
+    <section id="designPanel" class="panel tab-panel" hidden>
+      <div class="section-heading">
+        <div><p class="eyebrow">BACK DESIGN</p><h2>裏面デザイン</h2></div>
+      </div>
+      <p class="hint">画像は印刷向けに縮小・圧縮して保存します。プレビュー上で画像をドラッグ／ピンチしてトリミング位置と拡大率を調整し、メッセージもドラッグして配置できます。</p>
+      <div class="design-tools">
+        <label>はがきの向き
+          <select id="orientationDesign"><option value="portrait">縦向き（100 × 148 mm）</option><option value="landscape">横向き（148 × 100 mm）</option></select>
+        </label>
+        <label>メッセージの書体
+          <select id="fontFamily">
+            <option value="gothic">ゴシック体</option>
+            <option value="mincho">明朝体</option>
+            <option value="rounded">丸ゴシック体</option>
+          </select>
+        </label>
+        <label>メッセージの文字サイズ <output id="fontSizeValue" for="fontSize">16 pt</output>
+          <input id="fontSize" type="range" min="8" max="36" step="1" value="16">
+        </label>
+        <label>画像の拡大率／トリミング <input id="imageScale" type="range" min="0.5" max="2" step="0.05" value="1"></label>
+        <button id="rotateImageButton" class="button button-secondary" type="button">画像を90°回転</button>
+        <button id="resetCropButton" class="button button-secondary" type="button">トリミング位置をリセット</button>
+        <label class="span-2">メッセージ<textarea id="designText" rows="2" maxlength="120" placeholder="新年のご挨拶"></textarea></label>
+        <label>文字の横位置 <input id="textX" type="range" min="5" max="95" step="1" value="50"></label>
+        <label>文字の縦位置 <input id="textY" type="range" min="5" max="95" step="1" value="82"></label>
+      </div>
+      <div class="preview-layout">
+        <div id="backPreview" class="postcard back-preview" aria-label="裏面プレビュー">
+          <img id="designImage" alt="" draggable="false">
+          <div id="designMessage" class="design-message"></div>
+        </div>
+        <p id="designSizeHint" class="hint">プレビューははがき比率（100 × 148 mm）です。印刷時は用紙サイズを「はがき」に設定してください。</p>
+      </div>
+    </section>
+
+    <section id="printPanel" class="panel tab-panel" hidden>
+      <div class="section-heading">
+        <div><p class="eyebrow">PRINT</p><h2>印刷プレビュー</h2></div>
+      </div>
+      <div class="preview-controls">
+        <label for="printSide">印刷する面</label>
+        <select id="printSide">
+          <option value="address">宛名面</option>
+          <option value="back">デザイン面（裏面）</option>
+        </select>
+        <label for="orientationPrint">はがきの向き</label>
+        <select id="orientationPrint">
+          <option value="portrait">縦向き（100 × 148 mm）</option>
+          <option value="landscape">横向き（148 × 100 mm）</option>
+        </select>
+      </div>
+      <p id="printHelp" class="hint">住所録の「印刷」欄で対象を選択してください。年賀状じまい済みの宛先は、除外設定が有効な間は選択できません。</p>
+      <div id="printPreview" class="print-preview"></div>
+    </section>
+  </main>
+
+  <dialog id="contactDialog">
+    <form id="contactForm" method="dialog">
+      <div class="dialog-heading">
+        <h2 id="contactDialogTitle">宛先を追加</h2>
+        <button id="closeDialogButton" class="icon-button" type="button" aria-label="閉じる">×</button>
+      </div>
+      <input name="id" type="hidden">
+      <div class="form-grid">
+        <label>氏名 <span class="required">必須</span><input name="name" required maxlength="80"></label>
+        <label>敬称<input name="honorific" value="様" maxlength="12"></label>
+        <label>連名<input name="jointName" maxlength="80"></label>
+        <label>郵便番号<input name="postalCode" inputmode="numeric" maxlength="12"></label>
+        <label class="span-2">住所<input name="address" maxlength="240"></label>
+        <label class="toggle-label span-2"><input name="retired" type="checkbox"><span>年賀状じまい済み</span></label>
+        <label>送信終了年<input name="retiredYear" inputmode="numeric" maxlength="4" placeholder="2025"></label>
+        <label>じまいメモ<input name="retiredMemo" maxlength="160"></label>
+        <label>記録する年<input name="recordYear" inputmode="numeric" maxlength="4" placeholder="2026"></label>
+        <label>送受記録
+          <select name="recordDirection"><option value="">記録しない</option><option value="sent">出した</option><option value="received">受け取った</option></select>
+        </label>
+      </div>
+      <div class="dialog-actions">
+        <button id="deleteContactButton" class="button button-danger" type="button" hidden>削除</button>
+        <button class="button button-secondary" type="button" id="cancelDialogButton">キャンセル</button>
+        <button class="button button-primary" type="submit">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <template id="addressPrintTemplate">
+    <div class="address-card">
+      <div class="address-postal" aria-label="郵便番号"></div>
+      <div class="address-recipient"></div>
+      <div class="address-sender"></div>
+    </div>
+  </template>
+  <script src="app.js"></script>
+</body>
+</html>
