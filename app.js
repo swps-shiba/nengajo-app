@@ -49,7 +49,7 @@
             retiredYear: typeof contact.retiredYear === "string" ? contact.retiredYear : "",
             retiredMemo: typeof contact.retiredMemo === "string" ? contact.retiredMemo : "",
             records: Array.isArray(contact.records)
-              ? contact.records.filter(record => record && /^\d{4}$/.test(String(record.year)) && ["sent", "received"].includes(record.direction))
+              ? contact.records.filter(record => record && /^\d{4}$/.test(String(record.year)) && ["sent", "received", "mourning"].includes(record.direction))
                 .map(record => ({ year: String(record.year), direction: record.direction }))
               : []
           }))
@@ -129,7 +129,7 @@
       return;
     }
     rows.innerHTML = contacts.map(contact => {
-      const history = (contact.records || []).map(record => `${escapeHtml(record.year)}年${record.direction === "sent" ? "出" : "受"}`).join(" / ");
+      const history = (contact.records || []).map(record => `${escapeHtml(record.year)}年${record.direction === "sent" ? "出" : record.direction === "mourning" ? "喪" : "受"}`).join(" / ");
       const retired = contact.retired
         ? `<span class="retired-badge">じまい${contact.retiredYear ? `（${escapeHtml(contact.retiredYear)}年）` : ""}</span><div>${escapeHtml(contact.retiredMemo || "")}</div>`
         : "—";
@@ -315,9 +315,9 @@
         part && parts.indexOf(part) === index
       );
       const records = get("records").split(/[;；、]/).map(entry => {
-        const match = entry.trim().match(/^(\d{4})\s*[:：,]\s*(sent|received|出|受|出した|受け取った)$/i);
+        const match = entry.trim().match(/^(\d{4})\s*[:：,]\s*(sent|received|mourning|出|受|出した|受け取った|喪中はがき|喪中|喪)$/i);
         if (!match) return null;
-        const direction = /^(sent|出|出した)$/i.test(match[2]) ? "sent" : "received";
+        const direction = /^(mourning|喪中はがき|喪中|喪)$/i.test(match[2]) ? "mourning" : /^(sent|出|出した)$/i.test(match[2]) ? "sent" : "received";
         return { year: match[1], direction };
       }).filter(Boolean);
       imported.push({
