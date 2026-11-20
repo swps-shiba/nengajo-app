@@ -172,8 +172,9 @@
       form.elements[key].value = values[key] || "";
     }
     form.elements.retired.checked = Boolean(values.retired);
-    form.elements.recordYear.value = "";
+    form.elements.recordYear.value = currentYear();
     form.elements.recordDirection.value = "";
+    $("#contactFormStatus").textContent = "";
     contactDialog.showModal();
   }
 
@@ -196,13 +197,16 @@
       retiredMemo: values.retiredMemo.trim(),
       records: Array.isArray(existing?.records) ? [...existing.records] : []
     };
-    const year = values.recordYear.trim();
     const direction = values.recordDirection;
-    if ((year && !/^\d{4}$/.test(year)) || (year && !direction) || (!year && direction)) {
-      setStatus("年次記録を追加する場合は、4桁の年と「出した／受け取った／喪中を受けた」を両方指定してください。", true);
+    let year = values.recordYear.trim().replace(/[０-９]/g, char => String.fromCharCode(char.charCodeAt(0) - 0xFEE0));
+    if (direction && !year) year = currentYear();
+    if (direction && !/^\d{4}$/.test(year)) {
+      const message = "年次記録の年は4桁の数字で指定してください。";
+      setStatus(message, true);
+      $("#contactFormStatus").textContent = message;
       return;
     }
-    if (/^\d{4}$/.test(year) && direction) {
+    if (direction) {
       const prior = contact.records.findIndex(record => record.year === year && record.direction === direction);
       const record = { year, direction };
       if (prior >= 0) contact.records[prior] = record;
@@ -345,8 +349,9 @@
     if (!imported.length) throw new Error("氏名が入力された行がありません。");
     let added = 0, updated = 0;
     const contacts = [...state.contacts];
+    const postalDigits = value => String(value || "").replace(/[^\d]/g, "");
     for (const incoming of imported) {
-      const index = contacts.findIndex(contact => contact.name === incoming.name && contact.postalCode === incoming.postalCode);
+      const index = contacts.findIndex(contact => contact.name === incoming.name && postalDigits(contact.postalCode) === postalDigits(incoming.postalCode));
       if (index >= 0) {
         const existing = contacts[index];
         const merged = { ...existing, id: existing.id, records: existing.records || [] };

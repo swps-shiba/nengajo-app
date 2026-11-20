@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#ffffff"/>
+  <text x="248" y="262" text-anchor="middle" dominant-baseline="central"
+        font-family="'Hiragino Kaku Gothic ProN','Hiragino Sans','Noto Sans CJK JP','Yu Gothic',sans-serif"
+        font-size="330" font-weight="700" fill="#b3001b">賀</text>
+  <g>
+    <path d="M352 506 Q 420 478 452 428" stroke="#6b4226" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M408 482 Q 448 470 486 472" stroke="#6b4226" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <g transform="translate(452 428)">
+      <circle cx="0" cy="-13" r="10" fill="#f191ac"/>
+      <circle cx="12" cy="-4" r="10" fill="#f191ac"/>
+      <circle cx="8" cy="11" r="10" fill="#f191ac"/>
+      <circle cx="-8" cy="11" r="10" fill="#f191ac"/>
+      <circle cx="-12" cy="-4" r="10" fill="#f191ac"/>
+      <circle r="4.5" fill="#fff3b0"/>
+    </g>
+    <g transform="translate(486 472) scale(0.75)">
+      <circle cx="0" cy="-13" r="10" fill="#f4a7bd"/>
+      <circle cx="12" cy="-4" r="10" fill="#f4a7bd"/>
+      <circle cx="8" cy="11" r="10" fill="#f4a7bd"/>
+      <circle cx="-8" cy="11" r="10" fill="#f4a7bd"/>
+      <circle cx="-12" cy="-4" r="10" fill="#f4a7bd"/>
+      <circle r="4.5" fill="#fff3b0"/>
+    </g>
+    <circle cx="466" cy="446" r="6" fill="#f191ac"/>
+  </g>
+</svg>
