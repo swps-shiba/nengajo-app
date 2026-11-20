@@ -24,6 +24,7 @@
         imageX: 0, imageY: 0, fontFamily: "gothic", fontSize: 16
       },
       excludeRetired: true,
+      excludeMourning: true,
       printSide: "address",
       orientation: "portrait"
     };
@@ -79,7 +80,8 @@
         },
         orientation: parsed.orientation === "landscape" ? "landscape" : "portrait",
         printSide: parsed.printSide === "back" ? "back" : "address",
-        excludeRetired: parsed.excludeRetired !== false
+        excludeRetired: parsed.excludeRetired !== false,
+        excludeMourning: parsed.excludeMourning !== false
       };
     } catch (error) {
       console.error("保存データを読み込めませんでした。", error);
@@ -115,6 +117,14 @@
     })[char]);
   }
 
+  function currentYear() {
+    return String(new Date().getFullYear());
+  }
+
+  function isMourningThisYear(contact) {
+    return (contact.records || []).some(record => record.direction === "mourning" && record.year === currentYear());
+  }
+
   function visibleContacts() {
     return state.contacts.filter(contact => !(state.excludeRetired && contact.retired));
   }
@@ -133,11 +143,13 @@
       const retired = contact.retired
         ? `<span class="retired-badge">じまい${contact.retiredYear ? `（${escapeHtml(contact.retiredYear)}年）` : ""}</span><div>${escapeHtml(contact.retiredMemo || "")}</div>`
         : "—";
-      const checked = contact.printSelected !== false && !(state.excludeRetired && contact.retired) ? "checked" : "";
-      const disabled = state.excludeRetired && contact.retired ? "disabled" : "";
+      const mourning = isMourningThisYear(contact);
+      const excluded = (state.excludeRetired && contact.retired) || (state.excludeMourning && mourning);
+      const checked = contact.printSelected !== false && !excluded ? "checked" : "";
+      const disabled = excluded ? "disabled" : "";
       return `<tr>
         <td><input class="print-check" type="checkbox" data-id="${escapeHtml(contact.id)}" ${checked} ${disabled} aria-label="${escapeHtml(contact.name)}を印刷"></td>
-        <td><span class="contact-name">${escapeHtml(contact.name)}${contact.jointName ? `・${escapeHtml(contact.jointName)}` : ""} ${escapeHtml(contact.honorific || "様")}</span></td>
+        <td><span class="contact-name">${escapeHtml(contact.name)}${contact.jointName ? `・${escapeHtml(contact.jointName)}` : ""} ${escapeHtml(contact.honorific || "様")}</span>${mourning ? ` <span class="mourning-badge">喪中（${currentYear()}年）</span>` : ""}</td>
         <td>${escapeHtml(contact.postalCode || "")}<br>${escapeHtml(contact.address || "")}</td>
         <td>${retired}</td><td>${history || "—"}</td>
         <td><div class="row-actions"><button class="small-button edit-contact" data-id="${escapeHtml(contact.id)}" type="button">編集</button></div></td>
@@ -172,6 +184,7 @@
     const id = values.id || crypto.randomUUID();
     const existing = state.contacts.find(contact => contact.id === id);
     const contact = {
+      ...(existing || {}),
       id,
       name: values.name.trim(),
       jointName: values.jointName.trim(),
@@ -186,7 +199,7 @@
     const year = values.recordYear.trim();
     const direction = values.recordDirection;
     if ((year && !/^\d{4}$/.test(year)) || (year && !direction) || (!year && direction)) {
-      setStatus("年次記録を追加する場合は、4桁の年と「出した／受け取った」を両方指定してください。", true);
+      setStatus("年次記録を追加する場合は、4桁の年と「出した／受け取った／喪中を受けた」を両方指定してください。", true);
       return;
     }
     if (/^\d{4}$/.test(year) && direction) {
@@ -270,15 +283,16 @@
     jointName: ["連名", "連名1", "連名氏名", "同居人", "jointname"],
     honorific: ["敬称", "様", "敬称1", "honorific"],
     postalCode: ["郵便番号", "郵便", "〒", "郵便番号1", "postalcode", "zip"],
-    address: ["住所", "住所1", "住所２", "住所2", "番地", "address", "所在地"],
-    address2: ["住所3", "住所_2", "住所2", "建物名", "address2"],
+    address: ["住所", "住所1", "番地", "address", "所在地"],
+    address2: ["住所2", "住所_2", "address2"],
+    address3: ["住所3", "建物名", "address3"],
     retired: ["年賀状じまい", "辞退", "送付停止", "retired"],
     retiredYear: ["送信終了年", "辞退年", "終了年", "retiredyear"],
     retiredMemo: ["じまいメモ", "辞退メモ", "メモ", "retiredmemo"],
     records: ["年次記録", "送受記録", "年賀状記録", "records"]
   };
   function normalizeHeader(value) {
-    return value.trim().toLowerCase().replace(/[\s　_\-]/g, "");
+    return value.trim().toLowerCase().replace(/[０-９]/g, char => String.fromCharCode(char.charCodeAt(0) - 0xFEE0)).replace(/[\s　_\-]/g, "");
   }
 
   async function importCsv(file) {
@@ -311,7 +325,7 @@
       const name = get("name") || [get("surname"), get("givenName")].filter(Boolean).join(" ");
       if (!name) { skippedWithoutName++; continue; }
       const retiredText = get("retired").toLowerCase();
-      const addressParts = [get("address"), get("address2")].filter((part, index, parts) =>
+      const addressParts = [get("address"), get("address2"), get("address3")].filter((part, index, parts) =>
         part && parts.indexOf(part) === index
       );
       const records = get("records").split(/[;；、]/).map(entry => {
@@ -447,7 +461,7 @@
       return;
     }
     const checkedIds = new Set($$(".print-check:checked").map(input => input.dataset.id));
-    const contacts = state.contacts.filter(item => checkedIds.has(item.id) && !(state.excludeRetired && item.retired));
+    const contacts = state.contacts.filter(item => checkedIds.has(item.id) && !(state.excludeRetired && item.retired) && !(state.excludeMourning && isMourningThisYear(item)));
     if (!contacts.length) {
       preview.innerHTML = '<div class="empty-state">印刷対象がありません。住所録の「印刷」欄で宛先を選択してください。</div>';
       return;
@@ -616,6 +630,10 @@
   $("#excludeRetired").checked = state.excludeRetired;
   $("#excludeRetired").addEventListener("change", event => {
     if (persist({ ...state, excludeRetired: event.target.checked })) renderContacts();
+  });
+  $("#excludeMourning").checked = state.excludeMourning;
+  $("#excludeMourning").addEventListener("change", event => {
+    if (persist({ ...state, excludeMourning: event.target.checked })) renderContacts();
   });
   $("#contactRows").addEventListener("change", event => {
     if (!event.target.matches(".print-check")) return;

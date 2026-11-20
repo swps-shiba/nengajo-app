@@ -57,6 +57,7 @@ th { color: var(--muted); background: #f8faf9; font-size: .82rem; }
 td { font-size: .9rem; }
 .contact-name { font-weight: 700; }
 .retired-badge { display: inline-block; padding: 3px 8px; color: #8a4c13; background: #fff2dd; border-radius: 999px; font-size: .78rem; }
+.mourning-badge { display: inline-block; padding: 3px 8px; color: #41416b; background: #e7e7f2; border-radius: 999px; font-size: .78rem; }
 .row-actions { display: flex; gap: 6px; }
 .small-button { padding: 6px 9px; border: 1px solid var(--line); border-radius: 7px; background: white; cursor: pointer; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; max-width: 760px; }
